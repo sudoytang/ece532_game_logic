@@ -25,7 +25,7 @@ Image Image::clone() const {
     Image clone;
     clone.width = width;
     clone.height = height;
-    clone.data = makeManagedVramArray<Color>(width * height);
+    clone.data = makeManagedArray<Color>(width * height);
     std::memcpy(clone.data.get(), data.get(), width * height * sizeof(Color));
     return clone;
 }
@@ -71,7 +71,7 @@ Image Image::fromMemory(void* data, int width, int height) {
     Image image;
     image.width = width;
     image.height = height;
-    image.data = makeManagedVramArray<Color>(width * height);
+    image.data = makeManagedArray<Color>(width * height);
     std::memcpy(image.data.get(), data, width * height * sizeof(Color));
     return image;
 }
@@ -80,7 +80,7 @@ Image Image::fromBlank(int width, int height, Color color) {
     Image image;
     image.width = width;
     image.height = height;
-    image.data = makeManagedVramArray<Color>(width * height);
+    image.data = makeManagedArray<Color>(width * height);
     std::fill_n(image.data.get(), width * height, color);
     return image;
 }

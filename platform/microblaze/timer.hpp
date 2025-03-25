@@ -1,12 +1,7 @@
-/*
- * timer.hpp
- *
- *  Created on: Mar 4, 2025
- *      Author: lunar
- */
-
 #ifndef SRC_CONTROLLER_TIMER_HPP_
 #define SRC_CONTROLLER_TIMER_HPP_
+#ifdef __MICROBLAZE__
+
 #include <cstdint>
 #include "xparameters.h"
 #include "xil_exception.h"
@@ -42,5 +37,5 @@ struct TimerManager {
 };
 
 
-
+#endif /* __MICROBLAZE__ */
 #endif /* SRC_CONTROLLER_TIMER_HPP_ */

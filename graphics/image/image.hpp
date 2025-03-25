@@ -16,7 +16,7 @@ struct ImageSlice;
 struct Image {
     int width;
     int height;
-    ManagedVramArray<Color> data;
+    ManagedArray<Color> data;
 
     Image();
     Image(const Image& other) = delete;

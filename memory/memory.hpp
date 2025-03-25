@@ -6,8 +6,7 @@
 #include <cstdint>
 #include <utility>
 
-constexpr uint32_t HEAP_SIZE = 1024 * 1024 * 16;  // 16MB
-constexpr uint32_t VRAM_SIZE = 1024 * 1024 * 16;  // 16MB
+constexpr uint32_t HEAP_SIZE = 1024 * 1024 * 32;  // 32MB
 
 int memory_init();
 void memory_end();
@@ -16,13 +15,10 @@ void memory_end();
 
 void* allocate(uint32_t size);
 void* allocate_aligned(uint32_t size, uint32_t alignment);
-void* allocate_vram(uint32_t size);
 
 void deallocate(void* ptr);
-void deallocate_vram(void* ptr);
 
 void* reallocate(void* ptr, uint32_t size);
-void* reallocate_vram(void* ptr, uint32_t size);
 
 template<typename T>
 struct ManagedDeleter {
@@ -175,25 +171,6 @@ public:
     }
 };
 
-template<typename T>
-struct ManagedVRAMDeleter {
-    void operator()(T* ptr) const {
-        if (ptr == nullptr) {
-            return;
-        }
-        ptr->~T();
-        deallocate_vram(ptr);
-    }
-};
-
-
-template <typename T>
-using ManagedVram = Managed<T, ManagedVRAMDeleter<T>>;
-
-template <typename T>
-using ManagedVramArray = ManagedArray<T, ManagedArrayDeleter<T, ManagedVRAMDeleter<T>>>;
-
-
 template<typename T, typename... Args>
 Managed<T> makeManaged(Args&&... args) {
     T* ptr = (T*)allocate(sizeof(T));
@@ -204,15 +181,6 @@ Managed<T> makeManaged(Args&&... args) {
     return Managed<T>(ptr);
 }
 
-template<typename T, typename... Args>
-ManagedVram<T> makeManagedVram(Args&&... args) {
-    T* ptr = (T*)allocate_vram(sizeof(T));
-    if (ptr == nullptr) {
-        return nullptr;
-    }
-    new (ptr) T(std::forward<Args>(args)...);
-    return ManagedVram<T>(ptr);
-}
 
 template<typename T, typename... Args>
 ManagedArray<T> makeManagedArray(uint32_t size, Args&&... args) {
@@ -224,18 +192,6 @@ ManagedArray<T> makeManagedArray(uint32_t size, Args&&... args) {
         new (&ptr[i]) T(std::forward<Args>(args)...);
     }
     return ManagedArray<T>(ptr, size);
-}
-
-template<typename T, typename... Args>
-ManagedVramArray<T> makeManagedVramArray(uint32_t size, Args&&... args) {
-    T* ptr = (T*)allocate_vram(sizeof(T) * size);
-    if (ptr == nullptr) {
-        return nullptr;
-    }
-    for (uint32_t i = 0; i < size; i++) {
-        new (&ptr[i]) T(std::forward<Args>(args)...);
-    }
-    return ManagedVramArray<T>(ptr, size);
 }
 
 #endif  // MEMORY_HPP

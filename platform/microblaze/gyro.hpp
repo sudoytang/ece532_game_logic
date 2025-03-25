@@ -5,23 +5,49 @@
  *      Author: lunar
  */
 
-#ifndef SRC_CONTROLLER_GYRO_HPP_
-#define SRC_CONTROLLER_GYRO_HPP_
+#ifndef MICROBLAZE_GYRO_HPP_
+#define MICROBLAZE_GYRO_HPP_
 
-
+#ifdef __MICROBLAZE__
 
 
 extern "C" {
 #include "sleep.h"
-#include "PmodGYRO.h"
+#include "xparameters.h"
 }
 
-static int16_t calibrateX[100];
-static int16_t calibrateY[100];
-static int16_t calibrateZ[100];
+constexpr unsigned GYRO0_RAW_ADDR = XPAR_GYRO0_RAW_GPIO_BASEADDR;
+constexpr unsigned GYRO1_RAW_ADDR = XPAR_GYRO1_RAW_GPIO_BASEADDR;
+constexpr unsigned GYRO0_IP_ADDR = XPAR_GYRO_READER_0_S00_AXI_BASEADDR;
+constexpr unsigned GYRO1_IP_ADDR = XPAR_GYRO_READER_1_S00_AXI_BASEADDR;
+
+struct GyroRawData {
+	short X;
+	short Y;
+	short Z;
+	short R;
+	static GyroRawData get(void* raw_addr) {
+		GyroRawData res;
+		const unsigned raw_addr_u = (unsigned)raw_addr;
+		const unsigned XY_RAW = raw_addr_u + 0x0;
+		const unsigned ZR_RAW = raw_addr_u + 0x8;
+		unsigned xy0_val = *(volatile unsigned*)XY_RAW;
+		unsigned zr0_val = *(volatile unsigned*)ZR_RAW;
+		res.X = (short)(xy0_val & 0xffff);
+		res.Y = (short)((xy0_val >> 16) & 0xffff);
+		res.Z = (short)(zr0_val & 0xffff);
+		res.R = (short)((zr0_val >> 16) & 0xffff);
+		return res;
+	}
+};
+
 
 struct GYROManager {
-	PmodGYRO myDevice;
+
+	int16_t calibrateX[100];
+	int16_t calibrateY[100];
+	int16_t calibrateZ[100];
+
 	volatile int16_t xAxis = 0;
 	volatile int16_t yAxis = 0;
 	volatile int16_t zAxis = 0;
@@ -29,32 +55,42 @@ struct GYROManager {
 	volatile int16_t xMax = 0;
 	volatile int16_t yMax = 0;
 	volatile int16_t zMax = 0;
+
 	volatile int16_t xMin = 0;
 	volatile int16_t yMin = 0;
 	volatile int16_t zMin = 0;
-	volatile int16_t xAdjust;
-	volatile int16_t yAdjust;
-	volatile int16_t zAdjust;	// min and max values measured while at rest
+
+	volatile int16_t xAdjust = 0;
+	volatile int16_t yAdjust = 0;
+	volatile int16_t zAdjust = 0;	// min and max values measured while at rest
 
 	volatile float currentX = 0;
 	volatile float currentY = 0;
 	volatile float currentZ = 0;
+
 	volatile int loop = 0;
 
-	void init() {
-		GYRO_begin(&myDevice,
-			XPAR_PMODGYRO_0_AXI_LITE_SPI_BASEADDR,
-			XPAR_PMODGYRO_0_AXI_LITE_GPIO_BASEADDR
-		);
-		// Set Threshold Registers
-		GYRO_setThsXH(&myDevice, 0x0F);
-		GYRO_setThsYH(&myDevice, 0x0F);
-		GYRO_setThsZH(&myDevice, 0x0F);
-		GYRO_enableInt1(&myDevice, GYRO_INT1_XHIE);    // Threshold interrupt
-		GYRO_enableInt2(&myDevice, GYRO_REG3_I2_DRDY); // Data Rdy/FIFO interrupt
+	void* periph_addr;
+	bool use_raw;
+
+	volatile uint32_t btn_val;
+
+	void init(void* periph_address, bool use_software) {
+		periph_addr = periph_address;
+		use_raw = use_software;
 	}
 
 	void calib() {
+		if (use_raw) {
+			return calib_raw();
+		} else {
+			// TODO: implement calib using IP
+			return;
+		}
+	}
+
+
+	void calib_raw() {
 		print("Starting calibration in 10 seconds \nPlease place the gyro flat facing the monitor\n\n");
 		usleep(10000000);
 		// should be triggered by a button press or keyboard input
@@ -63,9 +99,10 @@ struct GYROManager {
 		print("Calibration starting!\nPlease leave the gyro at rest.\n");
 		{
 			for (int i = 0; i < 100; i++){
-				calibrateX[i] = GYRO_getX(&myDevice);
-				calibrateY[i] = GYRO_getY(&myDevice);
-				calibrateZ[i] = GYRO_getZ(&myDevice);
+				auto raw_data = GyroRawData::get(periph_addr);
+				calibrateX[i] = raw_data.X;
+				calibrateY[i] = raw_data.Y;
+				calibrateZ[i] = raw_data.Z;
 				usleep(100000);
 			}
 			float calX, calY, calZ;
@@ -88,8 +125,16 @@ struct GYROManager {
 		print("Calibration ended.\n");
 	}
 
-
 	void poll() {
+		if (use_raw) {
+			return poll_raw();
+		} else {
+			// TODO: implement poll using IP
+			return;
+		}
+	}
+
+	void poll_raw() {
 
 		float adjustedX = 0;
 		float adjustedY = 0;
@@ -102,10 +147,11 @@ struct GYROManager {
 		float outputAdjust = 3.15 / dps;
 //		print("Polling...\n\r");
 		while (1) {
-
-			xAxis = GYRO_getX(&myDevice);
-			yAxis = GYRO_getY(&myDevice);
-			zAxis = GYRO_getZ(&myDevice);
+			auto raw_data = GyroRawData::get(periph_addr);
+			xAxis = raw_data.X;
+			yAxis = raw_data.Y;
+			zAxis = raw_data.Z;
+			btn_val = raw_data.R;
 
 			// filter out small values (tend to fluctuate here when at rest)
 			if (xAxis > xMin && xAxis < xMax){
@@ -161,5 +207,5 @@ struct GYROManager {
 };
 
 
-
-#endif /* SRC_CONTROLLER_GYRO_HPP_ */
+#endif /* __MICROBLAZE__ */
+#endif /* MICROBLAZE_GYRO_HPP_ */

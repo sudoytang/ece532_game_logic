@@ -5,58 +5,49 @@
 #include "tlsf/tlsf.h"
 
 static void* heap = nullptr;
-static void* vram_heap = nullptr;
 static tlsf_t tlsf;
-static tlsf_t tlsf_vram;
-int memory_init() {
-#if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
-    heap = malloc(HEAP_SIZE);
-    vram_heap = malloc(VRAM_SIZE);
-    if (heap == nullptr || vram_heap == nullptr) {
-    	if (heap) free(heap);
-    	if (vram_heap) free(vram_heap);
-        return -1;
-    }
-    auto on_err = []() {
-    	if (tlsf) free(heap);
-    	if (tlsf_vram) free(vram);
-    };
 
-#elif defined(__MICROBLAZE__)
-    heap = 		(void*)0x83000000;
-    vram_heap = (void*)0x84000000;
-    auto on_err = []() {};
-#else
-    // unsupported platform
-    return -1;
+#if defined(__MICROBLAZE__)
+// predefined big array for memory allocation
+void* _mb_memory_pool = (void*)0x84000000;
 #endif
 
+
+int memory_init() {
+#if defined(__MICROBLAZE__)
+    heap = (void*)_mb_memory_pool;
+    auto on_error = +[](){};
+#else
+    heap = malloc(HEAP_SIZE);
+    if (heap == nullptr) {
+        return -1;
+    }
+    auto on_error = +[]() {
+        if (tlsf) free(heap);
+    };
+#endif
     memset(heap, 0, HEAP_SIZE);
-    memset(vram_heap, 0, VRAM_SIZE);
     tlsf = tlsf_create_with_pool(heap, HEAP_SIZE);
-    tlsf_vram = tlsf_create_with_pool(vram_heap, VRAM_SIZE);
-    if (tlsf == nullptr || tlsf_vram == nullptr) {
-    	on_err();
+    if (tlsf == nullptr) {
+    	on_error();
     	return -1;
     }
     return 0;
 }
 
 void memory_end() {
-#if defined(_WIN32) || defined(__linux__) || defined(__APPLE__)
-    free(heap);
-
-#elif defined(__MICROBLAZE__)
+#if defined(__MICROBLAZE__)
     heap = nullptr;
 #else
-    // unsupported platform
-    return;
+    free(heap);
+    heap = nullptr;
 #endif
+    return;
 }
+
 
 //#define MEMORY_DEBUG
 #ifdef MEMORY_DEBUG
-
 #define print_memalloc(size, addr) xil_printf("Allocated %d @%x\n", size, addr);
 #define print_memfree(addr) xil_printf("Freed @%x\n", addr);
 #define print_vmemalloc(size, addr) xil_printf("Allocated VMEM %d @%x\n", size, addr);
@@ -92,15 +83,6 @@ void* allocate_aligned(uint32_t size, uint32_t alignment) {
     return res;
 }
 
-void* allocate_vram(uint32_t size) {
-    if (tlsf_vram == nullptr || vram_heap == nullptr) {
-        return nullptr;
-    }
-    auto res = tlsf_memalign(tlsf_vram, 16, size);
-    print_vmemalloc(size, res);
-    return res;
-}
-
 void deallocate(void* ptr) {
     if (tlsf == nullptr || heap == nullptr) {
         return;
@@ -109,29 +91,12 @@ void deallocate(void* ptr) {
     print_memfree(ptr);
 }
 
-void deallocate_vram(void* ptr) {
-    if (tlsf_vram == nullptr || vram_heap == nullptr) {
-        return;
-    }
-    tlsf_free(tlsf_vram, ptr);
-    print_vmemfree(ptr);
-}
-
 void* reallocate(void* ptr, uint32_t size) {
     if (tlsf == nullptr || heap == nullptr) {
         return nullptr;
     }
     auto res = tlsf_realloc(tlsf, ptr, size);
     print_memrealloc(size, ptr, res);
-    return res;
-}
-
-void* reallocate_vram(void* ptr, uint32_t size) {
-    if (tlsf_vram == nullptr || vram_heap == nullptr) {
-        return nullptr;
-    }
-    auto res = tlsf_realloc(tlsf_vram, ptr, size);
-    print_vmemrealloc(size, ptr, res);
     return res;
 }
 
