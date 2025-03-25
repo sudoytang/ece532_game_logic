@@ -33,6 +33,10 @@ void registerAllIntrs() {
 	intrRegister({XPAR_INTC_0_AXIVDMA_1_VEC_ID, XAxiVdma_ReadIntrHandler, (void*)&m_fg.man.dma_inst});
 }
 
+#else
+
+#define xil_printf printf
+#define XST_SUCCESS 0
 #endif
 
 void (*softReset)(void) = nullptr;
