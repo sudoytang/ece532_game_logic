@@ -5,17 +5,23 @@
  *      Author: lunar
  */
 
+
+#ifndef MICROBLAZE_VDMA_HPP_
+#define MICROBLAZE_VDMA_HPP_
+
 #ifdef __MICROBLAZE__
-#ifndef VDMA_HPP
-#define VDMA_HPP
+
 
 #include "xparameters.h"
 #include "xaxivdma.h"
+#include "xil_cache.h"
+
+#include "../fwd.hpp"
 
 #include "../../graphics/display/display.hpp"
 #include "../../graphics/image/image.hpp"
 
-struct DisplayManager {
+struct VDMAManager {
 	static constexpr int H_MULTIPLE = 1;
 	static constexpr int V_MULTIPLE = 1;
 	Display800x600 display;
@@ -27,6 +33,10 @@ struct DisplayManager {
 	volatile int writing_fid = -1;
 
 	volatile int total_frame_count = 0;
+
+	void setDeviceId(int id) {
+		vdma_id = id;
+	}
 
 	int ReadSwapBuffer() {
 		if (last_written_fid == writing_fid) {
@@ -76,7 +86,7 @@ struct DisplayManager {
 
 
 	struct PayloadType {
-		DisplayManager* manager;
+		VDMAManager* manager;
 		int status;
 	} payload;
 
@@ -84,7 +94,7 @@ struct DisplayManager {
 
 		(void)sys_payload;  // silence compiler
 		auto fid = disp->getCurrentFID();
-		auto pld = (DisplayManager::PayloadType*)payload;
+		auto pld = (VDMAManager::PayloadType*)payload;
 		pld->manager->last_written_fid = fid;
 //		if (pld->manager->vdma_id == 1)
 //		xil_printf("[SWAP_CB] #%d Set Last Written buffer = %d\n", pld->manager->vdma_id, fid);
@@ -94,10 +104,10 @@ struct DisplayManager {
 
 	DisplayCB::FuncPtr point_cb_fn = +[](Display800x600* disp, void* payload, void* sys_payload) {
 		auto point = (std::pair<int, int>*)sys_payload;
-		auto pld = (DisplayManager::PayloadType*)payload;
+		auto pld = (VDMAManager::PayloadType*)payload;
 		auto vdma = &pld->manager->dma_inst;
-		constexpr int H_MAX_OFFSET = (DisplayManager::H_MULTIPLE - 1) * Display800x600::HRES;
-		constexpr int V_MAX_OFFSET = (DisplayManager::V_MULTIPLE - 1) * Display800x600::VRES;
+		constexpr int H_MAX_OFFSET = (VDMAManager::H_MULTIPLE - 1) * Display800x600::HRES;
+		constexpr int V_MAX_OFFSET = (VDMAManager::V_MULTIPLE - 1) * Display800x600::VRES;
 		auto x = point->first;
 		auto y = point->second;
 		bool invalid_op = false;
@@ -127,14 +137,14 @@ struct DisplayManager {
 			disp->pointScreen(fid, x, y);
 			return;
 		}
-		pld->status = DisplayManager::dmaResetCurrentScreenPtr(disp, vdma);
+		pld->status = VDMAManager::dmaResetCurrentScreenPtr(disp, vdma);
 		return;
 	};
 
 	DisplayCB::FuncPtr reload_cb_fn = +[](Display800x600* disp, void* payload, void* sys_payload) {
-		auto pld = (DisplayManager::PayloadType*)payload;
+		auto pld = (VDMAManager::PayloadType*)payload;
 		auto vdma = &pld->manager->dma_inst;
-		pld->status = DisplayManager::dmaResetCurrentScreenPtr(disp, vdma);
+		pld->status = VDMAManager::dmaResetCurrentScreenPtr(disp, vdma);
 		return;
 	};
 
@@ -153,11 +163,17 @@ struct DisplayManager {
 		return ptr;
 	}
 
+	static void FlushPixels(ImageSlice refresh_slice) {
+        auto start_cache_ptr = (UINTPTR)getFirstPixelAddress(refresh_slice);
+        int cache_len = (UINTPTR)getEndPixelAddress(refresh_slice) - start_cache_ptr;
+        Xil_DCacheFlushRange(start_cache_ptr, cache_len);
+	}
+
 	static int dmaResetCurrentScreenPtr(Display800x600* disp, XAxiVdma* vdma) {
 		void* ptrs[Display800x600::NBUF];
 		for (int i = 0; i < Display800x600::NBUF; i++) {
 			auto slice = disp->getScreen(i);
-			ptrs[i] = DisplayManager::getFirstPixelAddress(slice);
+			ptrs[i] = VDMAManager::getFirstPixelAddress(slice);
 		}
 		int status = XAxiVdma_DmaSetBufferAddr(vdma, XAXIVDMA_READ, (UINTPTR*)&ptrs);
 		if (status != XST_SUCCESS) {
@@ -257,7 +273,7 @@ struct DisplayManager {
 			return status;
 		}
 		auto onRead = +[](void* cb_ref, u32 mask) {
-			DisplayManager* manager = (DisplayManager*)cb_ref;
+			VDMAManager* manager = (VDMAManager*)cb_ref;
 			manager->total_frame_count += 1;
 //			manager->ReadSwapBuffer();
 //			manager->StartVDMA();
@@ -293,6 +309,5 @@ struct DisplayManager {
 };
 
 
-
-#endif // VDMA_HPP
 #endif // __MICROBLAZE__
+#endif // MICROBLAZE_VDMA_HPP_
