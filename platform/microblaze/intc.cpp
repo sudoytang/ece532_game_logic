@@ -1,6 +1,5 @@
 #include <cstdio>
 #include "intc.hpp"
-
 #ifdef __MICROBLAZE__
 
 constexpr size_t MAX_INTR_NUMBER = 32;
@@ -39,8 +38,11 @@ int init_intc() {
 		if (Status != XST_SUCCESS) {
 			xil_printf("Failed to Connect INTR[%u]: %d!\n", vec_id, Status);
 			failedStatus = Status;
+		} else {
+			xil_printf("INTR[%u] connected to %x.\n", vec_id, handler);
 		}
 	}
+	xil_printf("All specified INTRs connected.\n");
 	if (failedStatus != XST_SUCCESS) {
 		return failedStatus;
 	}
@@ -51,21 +53,23 @@ int init_intc() {
 		xil_printf( "Failed to start intc\r\n");
 		return XST_FAILURE;
 	}
-
+	xil_printf("Interrupt controller started.\n");
 	/* Enable interrupts from the hardware */
 
-	XIntc_Enable(IntcInstancePtr, XPAR_INTC_0_AXIVDMA_1_VEC_ID);
-	XIntc_Enable(IntcInstancePtr, XPAR_INTC_0_TMRCTR_0_VEC_ID);
 	for (size_t i = 0; i < intr_size; i++) {
 		auto vec_id = std::get<0>(intrs[i]);
 		XIntc_Enable(IntcInstancePtr, vec_id);
+		xil_printf("INTR[%u] enabled.\n", vec_id);
 	}
-
+	xil_printf("All specified intr enabled.\n");
 	Xil_ExceptionInit();
+	xil_printf("[Xil_ExceptionInit] done\n");
 	Xil_ExceptionRegisterHandler(XIL_EXCEPTION_ID_INT,
 			(Xil_ExceptionHandler)XIntc_InterruptHandler,
 			(void *)IntcInstancePtr);
-
+	xil_printf("[Xil_ExceptionRegisterHandler] done\n");
+	volatile unsigned* interrupt_vector = (unsigned*)0x10;
+	xil_printf("Interrupt Vector: %x\n", *interrupt_vector);
 	Xil_ExceptionEnable();
 	xil_printf("End init intc.\n");
 	return XST_SUCCESS;

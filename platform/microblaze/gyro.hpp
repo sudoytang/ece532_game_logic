@@ -18,8 +18,8 @@ extern "C" {
 
 constexpr unsigned GYRO0_RAW_ADDR = XPAR_GYRO0_RAW_GPIO_BASEADDR;
 constexpr unsigned GYRO1_RAW_ADDR = XPAR_GYRO1_RAW_GPIO_BASEADDR;
-constexpr unsigned GYRO0_IP_ADDR = XPAR_GYRO_READER_0_S00_AXI_BASEADDR;
-constexpr unsigned GYRO1_IP_ADDR = XPAR_GYRO_READER_1_S00_AXI_BASEADDR;
+constexpr unsigned GYRO0_IP_ADDR = XPAR_TEST3_V1_0_0_BASEADDR;
+constexpr unsigned GYRO1_IP_ADDR = XPAR_TEST3_V1_0_1_BASEADDR;
 
 struct GyroRawData {
 	short X;

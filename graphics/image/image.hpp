@@ -46,6 +46,8 @@ struct ImageView {
     Color* data;
 
     Image toImage() const;
+    Image upscale(int times) const;
+    Image downscale(int times) const;
     ImageSlice slice(int x, int y, int width, int height) const;
     ImageSlice slice() const;
     bool set(int x, int y, Color color);
