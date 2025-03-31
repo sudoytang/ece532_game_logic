@@ -6,6 +6,7 @@
 #include "../platform/microblaze/gyro.hpp"
 #include "xparameters.h"
 #include "../platform/microblaze/button_switch.hpp"
+#include "../platform/microblaze/keyboard.hpp"
 
 struct Controller {
     enum ControllerBinding {
@@ -17,17 +18,19 @@ struct Controller {
     };
 
     static constexpr float BUTTON_IMPULSE = 0.1f;
-    static constexpr float GYRO_IMPULSE_SCALE = 1.0f/10000.f;
+    static constexpr float GYRO_IMPULSE_SCALE = 1.0f/5000.f;
     static constexpr short GYRO_IMPULSE_THRESH = 100;
 
     ControllerBinding bindings[2] = {BIND_UNASSIGNED, BIND_UNASSIGNED};
 
     GYROManager gyro0;
     GYROManager gyro1;
+    Keyboard kb;
 
     void init() {
     	gyro0.init(0);
     	gyro1.init(1);
+    	kb.init();
     }
 
     void setBinding(int id, ControllerBinding binding) {
@@ -57,7 +60,7 @@ struct Controller {
     std::pair<float, float> readGyro0() {
     	short x, y, z;
         gyro0.read(x, y, z);
-        xil_printf("GYRO0: %d, %d, %d\n", x, y, z);
+//        xil_printf("GYRO0: %d, %d, %d\n", x, y, z);
         float impulse_x = 0, impulse_y = 0;
         impulse_x =
             (std::abs(x) < GYRO_IMPULSE_THRESH) ?
@@ -98,8 +101,22 @@ struct Controller {
         gyro1.calib();
     }
     std::pair<float, float> readKeyboard() {
-        // TODO!
-    	return {};
+        float impulse_x = 0, impulse_y = 0;
+
+        if (kb.key_w) {
+            impulse_y -= BUTTON_IMPULSE;
+        }
+        if (kb.key_s) {
+            impulse_y += BUTTON_IMPULSE;
+        }
+        if (kb.key_a) {
+            impulse_x -= BUTTON_IMPULSE;
+        }
+        if (kb.key_d) {
+            impulse_x += BUTTON_IMPULSE;
+        }
+//        xil_printf("Read Keyboard impulse %d%%, %d%%\n", (int)(100 * impulse_x), (int)(100 * impulse_y));
+        return {impulse_x, impulse_y};
     }
 
     std::pair<float, float> readButton() {

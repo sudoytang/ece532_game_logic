@@ -34,7 +34,6 @@ struct Game {
     	gameStart.init(&controller);
     	map.init(Map::MAP_0);  // default initialization
     	total_laps = 2;
-    	controller.init();
     }
     void draw_static(Draw bg_draw) {
     	if (mode == START) {
