@@ -25,31 +25,57 @@ struct GameOption {
 		S_MAP0,
 		S_MAP1,
 		S_MAP2,
+		S_LAP_DECR,
+		S_LAP_INCR,
 		S_BACK,
 		S_END_SELECTION
 	};
-	static constexpr int CTRL_BINDING_TEXT_X 	= 50;
-	static constexpr int CTRL_BINDING_TEXT_Y 	= 50;
-	static constexpr int CAR0_BINDING_TEXT_X 	= 100;
-	static constexpr int CAR0_BINDING_TEXT_Y 	= 150;
-	static constexpr int CAR1_BINDING_TEXT_X 	= 100;
-	static constexpr int CAR1_BINDING_TEXT_Y 	= 180;
-	static constexpr int MAP_SELECTION_TEXT_X	= 50;
-	static constexpr int MAP_SELECTION_TEXT_Y   = 270;
-	static constexpr int MAP0_THUMBNAIL_X		= 100;
-	static constexpr int MAP0_THUMBNAIL_Y		= 320;
-	static constexpr int MAP1_THUMBNAIL_X		= 300;
-	static constexpr int MAP1_THUMBNAIL_Y		= 320;
-	static constexpr int MAP2_THUMBNAIL_X		= 500;
-	static constexpr int MAP2_THUMBNAIL_Y		= 320;
-	static constexpr int MAP0_NAME_TEXT_X		= 100 + 16;
-	static constexpr int MAP0_NAME_TEXT_Y		= 450;
-	static constexpr int MAP1_NAME_TEXT_X		= 300 + 16;
-	static constexpr int MAP1_NAME_TEXT_Y		= 450;
-	static constexpr int MAP2_NAME_TEXT_X		= 500 + 16;
-	static constexpr int MAP2_NAME_TEXT_Y		= 450;
-	static constexpr int BACK_TEXT_X			= 100;
-	static constexpr int BACK_TEXT_Y    		= 500;
+	static constexpr int PADDING_X				= 50;
+	static constexpr int PADDING_Y				= 50;
+	static constexpr int CTRL_BINDING_TEXT_X 	= PADDING_X;
+	static constexpr int CTRL_BINDING_TEXT_Y 	= PADDING_Y;
+	static constexpr int CAR0_BINDING_TEXT_X 	= PADDING_X;
+	static constexpr int CAR0_BINDING_TEXT_Y 	= CTRL_BINDING_TEXT_Y + 50;
+	static constexpr int CAR1_BINDING_TEXT_X 	= CAR0_BINDING_TEXT_X;
+	static constexpr int CAR1_BINDING_TEXT_Y 	= CAR0_BINDING_TEXT_Y + 30;
+	static constexpr int GYRO0_STAT_BOX_X		= PADDING_X;
+	static constexpr int GYRO0_STAT_BOX_Y		= CAR1_BINDING_TEXT_Y + 50;
+	static constexpr int GYRO0_STAT_CENTER_X	= GYRO0_STAT_BOX_X + 50;
+	static constexpr int GYRO0_STAT_CENTER_Y	= GYRO0_STAT_BOX_Y + 50;
+	static constexpr int GYRO1_STAT_BOX_X		= GYRO0_STAT_BOX_X + 120;
+	static constexpr int GYRO1_STAT_BOX_Y		= GYRO0_STAT_BOX_Y;
+	static constexpr int GYRO1_STAT_CENTER_X	= GYRO1_STAT_BOX_X + 50;
+	static constexpr int GYRO1_STAT_CENTER_Y	= GYRO1_STAT_BOX_Y + 50;
+	static constexpr int GYRO_CALIB_HINT_X		= GYRO1_STAT_BOX_X + 120;
+	static constexpr int GYRO_CALIB_HINT_Y_0	= GYRO0_STAT_BOX_Y;
+	static constexpr int GYRO_CALIB_HINT_Y_1	= GYRO_CALIB_HINT_Y_0 + 40;
+
+	static constexpr int MAP_SELECTION_TEXT_X	= PADDING_X;
+	static constexpr int MAP_SELECTION_TEXT_Y   = 330;
+	static constexpr int MAP0_THUMBNAIL_X		= PADDING_X;
+	static constexpr int MAP0_THUMBNAIL_Y		= MAP_SELECTION_TEXT_Y + 50;
+	static constexpr int MAP1_THUMBNAIL_X		= MAP0_THUMBNAIL_X + 200;
+	static constexpr int MAP1_THUMBNAIL_Y		= MAP0_THUMBNAIL_Y;
+	static constexpr int MAP2_THUMBNAIL_X		= MAP1_THUMBNAIL_X + 200;
+	static constexpr int MAP2_THUMBNAIL_Y		= MAP0_THUMBNAIL_Y;
+	static constexpr int MAP0_NAME_TEXT_X		= MAP0_THUMBNAIL_X + 16;
+	static constexpr int MAP0_NAME_TEXT_Y		= MAP0_THUMBNAIL_Y + 130;
+	static constexpr int MAP1_NAME_TEXT_X		= MAP1_THUMBNAIL_X + 16;
+	static constexpr int MAP1_NAME_TEXT_Y		= MAP1_THUMBNAIL_Y + 130;
+	static constexpr int MAP2_NAME_TEXT_X		= MAP2_THUMBNAIL_X + 16;
+	static constexpr int MAP2_NAME_TEXT_Y		= MAP2_THUMBNAIL_Y + 130;
+	static constexpr int LAP_TEXT_X				= MAP2_THUMBNAIL_X + 200;
+	static constexpr int LAP_TEXT_Y				= MAP0_THUMBNAIL_Y;
+	static constexpr int LAP_SELECT_TEXT_X		= LAP_TEXT_X;
+	static constexpr int LAP_SELECT_TEXT_Y		= LAP_TEXT_Y + 30;
+	static constexpr int LAP_NUMBER_TEXT_X		= LAP_SELECT_TEXT_X + 32;
+	static constexpr int LAP_NUMBER_TEXT_Y		= LAP_SELECT_TEXT_Y;
+	static constexpr int LAP_DECREASE_X			= LAP_SELECT_TEXT_X;
+	static constexpr int LAP_DECREASE_Y			= LAP_SELECT_TEXT_Y;
+	static constexpr int LAP_INCREASE_X			= LAP_SELECT_TEXT_X + 64;
+	static constexpr int LAP_INCREASE_Y			= LAP_SELECT_TEXT_Y;
+	static constexpr int BACK_TEXT_X			= 368;
+	static constexpr int BACK_TEXT_Y    		= 540;
 	const std::array<std::tuple<int/*x*/, int/*y*/, int/*w*/, int/*h*/>, S_END_SELECTION> selection_boxes = {{
 		{CAR0_BINDING_TEXT_X + 16 * 7 	- 1, CAR0_BINDING_TEXT_Y - 1, 64 + 2, 16 + 2},
 		{CAR0_BINDING_TEXT_X + 16 * 12 	- 1, CAR0_BINDING_TEXT_Y - 1, 64 + 2, 16 + 2},
@@ -64,7 +90,9 @@ struct GameOption {
 		{MAP0_THUMBNAIL_X - 1,				 MAP0_THUMBNAIL_Y - 1	, 160 + 2, 120 + 10 + 16 + 2},
 		{MAP1_THUMBNAIL_X - 1,				 MAP1_THUMBNAIL_Y - 1	, 160 + 2, 120 + 10 + 16 + 2},
 		{MAP2_THUMBNAIL_X - 1,				 MAP2_THUMBNAIL_Y - 1	, 160 + 2, 120 + 10 + 16 + 2},
-		{BACK_TEXT_X		 + 16 * 13  - 1, BACK_TEXT_Y 		 - 1, 64 + 2, 16 + 2},
+		{LAP_DECREASE_X - 1,				 LAP_DECREASE_Y - 1		, 16 + 2, 16 + 2},
+		{LAP_INCREASE_X - 1,				 LAP_INCREASE_Y - 1		, 16 + 2, 16 + 2},
+		{BACK_TEXT_X - 1, 					 BACK_TEXT_Y - 1		, 64 + 2, 16 + 2},
 	}};
 
 	const std::array<std::pair<int/*id*/, Controller::ControllerBinding>, S_END_SELECTION> ctrlbd_mapper = {{
@@ -86,13 +114,15 @@ struct GameOption {
 	bool selection_changed = true;
 	bool first_draw_static = true;
 	bool first_draw_dyn = true;
-	void init(Controller* con, Map* p_map) {
+	int* lap_number;
+	void init(Controller* con, Map* p_map, int* laps) {
 		controller = con;
 		map_datas = p_map->map_data.data();
 		map_selection = &p_map->sel;
 		selection = S_BACK;
 		first_draw_dyn = true;
 		first_draw_static = true;
+		lap_number = laps;
 	}
 	void draw_static(Draw draw_bg) {
 		xil_printf("Draw Static Option Page!\n");
@@ -106,9 +136,21 @@ struct GameOption {
 			"Car 0:  N/A  GY0  GY1  BTN  KBD", C_WHITE);
 		draw_bg.drawText(Font::DEFAULT_FONT16, CAR1_BINDING_TEXT_X, CAR1_BINDING_TEXT_Y,
 			"Car 1:  N/A  GY0  GY1  BTN  KBD", C_WHITE);
+
+		draw_bg.drawRect(GYRO0_STAT_BOX_X, GYRO0_STAT_BOX_Y, 100, 100, C_WHITE);
+		draw_bg.drawRect(GYRO1_STAT_BOX_X, GYRO1_STAT_BOX_Y, 100, 100, C_WHITE);
+		draw_bg.drawText(Font::DEFAULT_FONT16, GYRO0_STAT_BOX_X, GYRO0_STAT_BOX_Y,
+			"GY0", C_WHITE);
+		draw_bg.drawText(Font::DEFAULT_FONT16, GYRO1_STAT_BOX_X, GYRO1_STAT_BOX_Y,
+			"GY1", C_WHITE);
+		draw_bg.drawText(Font::DEFAULT_FONT16, GYRO_CALIB_HINT_X, GYRO_CALIB_HINT_Y_0,
+			"Flip SW0 to ON to reset GY0", C_WHITE);
+		draw_bg.drawText(Font::DEFAULT_FONT16, GYRO_CALIB_HINT_X, GYRO_CALIB_HINT_Y_1,
+			"Flip SW15 to ON to reset GY1", C_WHITE);
+
+
 		draw_bg.drawText(Font::DEFAULT_FONT32, MAP_SELECTION_TEXT_X, MAP_SELECTION_TEXT_Y,
 			"Track Selection:", C_WHITE);
-
 		draw_bg.drawImage(MAP0_THUMBNAIL_X, MAP0_THUMBNAIL_Y,
 			ImageView::fromMemory((void*)map_datas[0].map_image_src, 800, 600).downscale(5));
 		draw_bg.drawImage(MAP1_THUMBNAIL_X, MAP1_THUMBNAIL_Y,
@@ -122,8 +164,18 @@ struct GameOption {
 			map_datas[1].map_name, C_WHITE);
 		draw_bg.drawText(Font::DEFAULT_FONT16, MAP2_NAME_TEXT_X, MAP2_NAME_TEXT_Y,
 			map_datas[2].map_name, C_WHITE);
+		draw_bg.drawText(Font::DEFAULT_FONT16, LAP_TEXT_X, LAP_TEXT_Y,
+			"LAPS:", C_WHITE);
+		draw_bg.drawText(Font::DEFAULT_FONT16, LAP_SELECT_TEXT_X, LAP_SELECT_TEXT_Y,
+			"-   +", C_WHITE);
+		char buf[2];
+		buf[1] = 0;
+		buf[0] = '0' + *lap_number;
+		xil_printf("lap_number = %d\n", *lap_number);
+		draw_bg.drawText(Font::DEFAULT_FONT16, LAP_NUMBER_TEXT_X, LAP_NUMBER_TEXT_Y,
+			buf, C_WHITE);
 		draw_bg.drawText(Font::DEFAULT_FONT16, BACK_TEXT_X, BACK_TEXT_Y,
-			"             BACK              ", C_WHITE);
+			"BACK", C_WHITE);
 		auto bd0 = controller->bindings[0];
 		auto bd1 = controller->bindings[1];
 		auto getTextOffset = [](Controller::ControllerBinding bd) -> int {
@@ -160,13 +212,13 @@ struct GameOption {
 
 		int bd_offset0 = getTextOffset(bd0);
 		if (bd_offset0 != 0) {
-			draw_bg.drawText(Font::DEFAULT_FONT16, 100 + 16 * bd_offset0, 150, ">", C_WHITE);
+			draw_bg.drawText(Font::DEFAULT_FONT16, CAR0_BINDING_TEXT_X + 16 * bd_offset0, CAR0_BINDING_TEXT_Y, ">", C_WHITE);
 		} else {
 			xil_printf("Invalid Controller Binding: 0x%x\n", bd0);
 		}
 		int bd_offset1 = getTextOffset(bd1);
 		if (bd_offset0 != 0) {
-			draw_bg.drawText(Font::DEFAULT_FONT16, 100 + 16 * bd_offset1, 180, ">", C_WHITE);
+			draw_bg.drawText(Font::DEFAULT_FONT16, CAR1_BINDING_TEXT_X + 16 * bd_offset1, CAR1_BINDING_TEXT_Y, ">", C_WHITE);
 		} else {
 			xil_printf("Invalid Controller Binding: 0x%x\n", bd1);
 		}
@@ -174,6 +226,38 @@ struct GameOption {
 	}
 
 	void draw_dynamic(Draw draw_fg) {
+		static int last_draw_x0;
+		static int last_draw_y0;
+		static int last_draw_x1;
+		static int last_draw_y1;
+		auto normalize = [](short val) -> short {
+			if (val > 950) {
+				val = 950;
+			} else if (val < -950) {
+				val = -950;
+			}
+			return val / 20;
+		};
+		short x, y, z;
+		int draw_x, draw_y;
+		controller->gyro0.read(x, y, z);
+		draw_x = GYRO0_STAT_CENTER_X + normalize(x) - 1;
+		draw_y = GYRO0_STAT_CENTER_Y + normalize(y) - 1;
+		draw_fg.drawRect(last_draw_x0, last_draw_y0, 3, 3, C_TRANSPARENT, true);
+		draw_fg.drawRect(draw_x, draw_y, 3, 3, C_WHITE, true);
+		draw_fg.FlushPixels(draw_fg.getSlice().slice(GYRO0_STAT_BOX_X, GYRO0_STAT_BOX_Y, 100, 100));
+		last_draw_x0 = draw_x;
+		last_draw_y0 = draw_y;
+
+		controller->gyro1.read(x, y, z);
+		draw_x = GYRO1_STAT_CENTER_X + normalize(x) - 1;
+		draw_y = GYRO1_STAT_CENTER_Y + normalize(y) - 1;
+		draw_fg.drawRect(last_draw_x1, last_draw_y1, 3, 3, C_TRANSPARENT, true);
+		draw_fg.drawRect(draw_x, draw_y, 3, 3, C_WHITE, true);
+		draw_fg.FlushPixels(draw_fg.getSlice().slice(GYRO1_STAT_BOX_X, GYRO1_STAT_BOX_Y, 100, 100));
+		last_draw_x1 = draw_x;
+		last_draw_y1 = draw_y;
+
 		if (!selection_changed && !first_draw_dyn) return;
 		first_draw_dyn = false;
 		xil_printf("Option Dynamic Redraw\n");
@@ -184,7 +268,7 @@ struct GameOption {
 			} else {
 				draw_fg.drawRect(x, y, w, h, C_TRANSPARENT);
 			}
-			draw_fg.FlushPixels(draw_fg.getSlice().slice(x, y, w, h));
+			draw_fg.FlushPixels(draw_fg.getSlice().slice(x, y, w, h + 1));
 		}
 	}
 
@@ -198,7 +282,7 @@ struct GameOption {
 		if (btn_event & BTND) {
 			if (stat == S_BACK) {
 				// do nothing
-			} else if (stat >= S_MAP0 && stat <= S_MAP2) {
+			} else if (stat >= S_MAP0 && stat <= S_LAP_INCR) {
 				stat = S_BACK;
 			} else if (stat >= S_CAR1_UNASSIGNED && stat <= S_CAR1_GYRO0) {
 				stat = S_MAP0;
@@ -217,7 +301,7 @@ struct GameOption {
 				stat = S_CAR1_GYRO1;
 			} else if (stat == S_MAP0) {
 				stat = S_CAR1_UNASSIGNED;
-			} else if (stat == S_MAP2) {
+			} else if (stat >= S_MAP2 && stat <= S_LAP_INCR) {
 				stat = S_CAR1_KEYBOARD;
 			} else if (stat >= S_CAR1_UNASSIGNED && stat <= S_CAR1_KEYBOARD) {
 				stat = stat + S_CAR0_UNASSIGNED - S_CAR1_UNASSIGNED;

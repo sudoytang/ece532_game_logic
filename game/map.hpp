@@ -45,36 +45,36 @@ struct Map {
 			.map_image_src = img_map_0_data,
 			.respawn_points = {{
 				// respawn_point of map0, car0
-				std::make_tuple(300, 490, 0),  // the third number is the direction index (see car.hpp)
+				std::make_tuple(400, 300, 6),  // the third number is the direction index (see car.hpp)
 				// respawn_point of map0, car1
-				std::make_tuple(300, 520, 0),
+				std::make_tuple(440, 300, 6),
 			}},
-			.start_end_collibox = std::make_tuple(340, 505, 16, 55),
-			.halfway_collibox = std::make_tuple(150, 192, 16, 56),
+			.start_end_collibox = std::make_tuple(378, 340, 118, 16),
+			.halfway_collibox = std::make_tuple(450, 28, 16, 62),
 		},
 		{  // track 1
 			.map_name = "Track 1",
 			.map_image_src = img_map_1_data,
 			.respawn_points = {{
 				// respawn_point of map1, car0
-				std::make_tuple(390, 300, 6),
+				std::make_tuple(700, 520, 2),
 				// respawn_point of map1, car1
-				std::make_tuple(430, 300, 6),
+				std::make_tuple(735, 520, 2),
 			}},
-			.start_end_collibox = std::make_tuple(370, 340, 115, 16),
-			.halfway_collibox = std::make_tuple(365, 30, 16, 65),
+			.start_end_collibox = std::make_tuple(697, 500, 71, 16),
+			.halfway_collibox = std::make_tuple(41, 280, 78, 16),
 		},
 		{  // track 2
 			.map_name = "Track 2",
 			.map_image_src = img_map_2_data,
 			.respawn_points = {{
 				// respawn_point of map2, car0
-				std::make_tuple(710, 520, 2),
+				std::make_tuple(310, 500, 4),
 				// respawn_point of map2, car1
-				std::make_tuple(740, 520, 2),
+				std::make_tuple(310, 540, 4),
 			}},
-			.start_end_collibox = std::make_tuple(697, 500, 70, 16),
-			.halfway_collibox = std::make_tuple(41, 280, 80, 16),
+			.start_end_collibox = std::make_tuple(280, 511, 16, 73),
+			.halfway_collibox = std::make_tuple(728, 130, 64, 16),
 		}
     }};
 

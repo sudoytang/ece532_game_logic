@@ -8,21 +8,16 @@
 #ifndef SRC_GAME_GAMESTART_HPP_
 #define SRC_GAME_GAMESTART_HPP_
 
-#include "data/main_menu_mario_style.h"
+#include "data/title.h"
 
 struct GameStart {
-	static constexpr int P1_SEL_X = 220;
-	static constexpr int P1_SEL_Y = 270;
-	static constexpr int P1_SEL_W = 320;
-	static constexpr int P1_SEL_H = 60;
-	static constexpr int P2_SEL_X = 220;
-	static constexpr int P2_SEL_Y = 330;
-	static constexpr int P2_SEL_W = 320;
-	static constexpr int P2_SEL_H = 60;
-	static constexpr int OP_SEL_X = 335;
-	static constexpr int OP_SEL_Y = 400;
-	static constexpr int OP_SEL_W = 130;
-	static constexpr int OP_SEL_H = 130;
+	static constexpr int SEL_X 		= 300;
+	static constexpr int SEL_Y		= 458;
+	static constexpr int SEL_W		= 200;
+	static constexpr int SEL_H		= 42;
+	static constexpr int P1_SEL_Y	= SEL_Y;
+	static constexpr int P2_SEL_Y 	= P1_SEL_Y + SEL_H;
+	static constexpr int OP_SEL_Y	= P2_SEL_Y + SEL_H;
 //	static constexpr std::tuple<int/*x*/, int/*y*/, int/*w*/, int/*h*/> p1_selection = {220, 270, 360, 70};
 //	static constexpr std::tuple<int/*x*/, int/*y*/, int/*w*/, int/*h*/> p2_selection = {220, 340, 360, 70};
 //	static constexpr std::tuple<int/*x*/, int/*y*/, int/*w*/, int/*h*/> op_selection = {465, 530, 130, 130};
@@ -42,7 +37,7 @@ struct GameStart {
 	void init(Controller* con) {
 		controller = con;
 		if (!main_menu.data) {
-			main_menu = Image::fromMemory((void*)img_main_menu_mario_style_data, 800, 600);
+			main_menu = Image::fromMemory((void*)img_title_data, 800, 600);
 		}
 		first_draw_dyn = true;
 	}
@@ -59,46 +54,46 @@ struct GameStart {
 
 		switch (selection) {
 		case S_1PLAYER:
-			x = P2_SEL_X, y = P2_SEL_Y, w = P2_SEL_W, h = P2_SEL_H;
+			x = SEL_X, y = P2_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
-			x = OP_SEL_X, y = OP_SEL_Y, w = OP_SEL_W, h = OP_SEL_H;
+			x = SEL_X, y = OP_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
-			x = P1_SEL_X, y = P1_SEL_Y, w = P1_SEL_W, h = P1_SEL_H;
+			x = SEL_X, y = P1_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_WHITE);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
 			break;
 		case S_2PLAYER:
-			x = P1_SEL_X, y = P1_SEL_Y, w = P1_SEL_W, h = P1_SEL_H;
+			x = SEL_X, y = P1_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
-			x = OP_SEL_X, y = OP_SEL_Y, w = OP_SEL_W, h = OP_SEL_H;
+			x = SEL_X, y = OP_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
-			x = P2_SEL_X, y = P2_SEL_Y, w = P2_SEL_W, h = P2_SEL_H;
+			x = SEL_X, y = P2_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_WHITE);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
 			break;
 		case S_OPTION:
-			x = P1_SEL_X, y = P1_SEL_Y, w = P1_SEL_W, h = P1_SEL_H;
+			x = SEL_X, y = P1_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
-			x = P2_SEL_X, y = P2_SEL_Y, w = P2_SEL_W, h = P2_SEL_H;
+			x = SEL_X, y = P2_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
-			x = OP_SEL_X, y = OP_SEL_Y, w = OP_SEL_W, h = OP_SEL_H;
+			x = SEL_X, y = OP_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_WHITE);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
 			break;
 		default:
-			x = P1_SEL_X, y = P1_SEL_Y, w = P1_SEL_W, h = P1_SEL_H;
+			x = SEL_X, y = P1_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
-			x = P2_SEL_X, y = P2_SEL_Y, w = P2_SEL_W, h = P2_SEL_H;
+			x = SEL_X, y = P2_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
-			x = OP_SEL_X, y = OP_SEL_Y, w = OP_SEL_W, h = OP_SEL_H;
+			x = SEL_X, y = OP_SEL_Y, w = SEL_W, h = SEL_H;
 			fg_draw.drawRect(x, y, w, h, C_TRANSPARENT);
 			fg_draw.FlushPixels(fg_draw.getSlice().slice(x, y, w, h));
 			break;

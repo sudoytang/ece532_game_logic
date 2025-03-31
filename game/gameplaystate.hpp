@@ -10,7 +10,9 @@
 
 
 struct GamePlayState {
-	static constexpr int TOTAL_LAPS = 3;
+	int TOTAL_LAPS;
+//	GamePlayState() : GamePlayState(3) {}
+	GamePlayState(int total_laps) :TOTAL_LAPS(total_laps) {}
 	enum State {
 		BEFORE_START,
 		START,
