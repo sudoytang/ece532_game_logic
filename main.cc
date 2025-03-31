@@ -49,7 +49,7 @@ if (status != XST_SUCCESS) { 												\
 }
 
 
-
+Game game;
 
 
 
@@ -87,6 +87,7 @@ int init_all() {
 
 	status = timer.SetupTimer();
 	CHK_STATUS(status);
+	game.controller.init();
 
 	registerAllIntrs();
 	status = init_intc();
@@ -98,7 +99,7 @@ int init_all() {
 constexpr int height = Display800x600::VRES;
 constexpr int width = Display800x600::HRES;
 
-Game game;
+
 
 int main_game_final() {
 	xil_printf("\n\nHello World!\n");
@@ -147,6 +148,13 @@ int main_game_final() {
 	}
 }
 
+int kb_main() {
+	game.controller.kb.init();
+	init_intc();
+	while (1) {
+		usleep(10000);
+	}
+}
 
 
 int main() {
@@ -161,6 +169,8 @@ int main() {
 		xil_printf("System corrputed!!!!!\n");
 		while (true) {}
 	}
+
+//	kb_main();
 //	auto status = init_all();
 //	CHK_STATUS(status);
 //	main_1();
