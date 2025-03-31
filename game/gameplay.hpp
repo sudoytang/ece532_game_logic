@@ -22,21 +22,24 @@ struct GamePlay {
     Car cars;
     Controller* controller;
     Map* map;
+    int total_laps;
     int framestamp = 0;
 #ifdef __MICROBLAZE__
     SpriteEngine sprite_engine;
     bool engine_initialized = false;
 #endif
 
+    std::array<GamePlayState, 2> states = {{
+    	2, 2
+    }};
 
-
-    std::array<GamePlayState, 2> states;
     std::array<int, 2> finish_framestamp;
 
-    void init(Controller* con, Map* m, bool is_multiplayer) {
+    void init(Controller* con, Map* m, bool is_multiplayer, int laps) {
         map = m;
         controller = con;
         framestamp = 0;
+        total_laps = laps;
         auto& active_map = map->map_data[map->sel];
         auto [x0, y0, d0] = active_map.respawn_points[0];
         auto [x1, y1, d1] = active_map.respawn_points[1];
@@ -46,7 +49,7 @@ struct GamePlay {
         	cars = Car(x0, y0, d0);
         }
         for (int id = 0; id < 1 + cars.has_2nd_car; id++) {
-        	states[id] = GamePlayState{};
+        	states[id] = GamePlayState{total_laps};
         	finish_framestamp[id] = 0;
         }
         sprite_engine.reset();
@@ -71,10 +74,6 @@ struct GamePlay {
     bool update() {
     	framestamp++;
     	auto impulse_0 = controller->getCarImpulse(0);
-    	if (framestamp % 60 == 0) {
-    		xil_printf("Car 0 Impulse: %d, %d\n", (int)(impulse_0.first * 100), (int)(impulse_0.second * 100));
-    		xil_printf("Gyroscope 0 RAW: %d, %d\n", (int)(controller->gyro0.currentX * 100), (int)(controller->gyro0.currentY * 100));
-    	}
     	cars.applyImpulseCartesian(0, impulse_0);
     	if (cars.has_2nd_car) {
         	cars.applyImpulseCartesian(1, controller->getCarImpulse(1));

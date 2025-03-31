@@ -122,7 +122,6 @@ int main_game_final() {
     xil_printf("Starting Game loop!\n");
 	for (;;) {
 
-		game.controller.GyroSubtick();
 		auto frame_count = m_fg.getFrameCount();
 		if (last_frame_count >= frame_count) {
 			usleep(1666);

@@ -27,10 +27,14 @@ struct Game {
     GameEnd gameEnd;
     Controller controller;
     Map map;
+    int total_laps;
+
     void init() {
     	mode = START;
     	gameStart.init(&controller);
     	map.init(Map::MAP_0);  // default initialization
+    	total_laps = 2;
+    	controller.init();
     }
     void draw_static(Draw bg_draw) {
     	if (mode == START) {
@@ -59,26 +63,44 @@ struct Game {
     // returns: if we need a static redraw
     bool update() {
     	// if the switch[7] is on, we return to gamestart state
-    	uint16_t switches = controller.GetSwitchesValue();
-    	if (switches & (1 << 7)) {
+    	uint16_t switch_event = controller.GetSwitchOnOffEvent().first;
+    	if (switch_event & SW_SOFT_RESET) {
+    		xil_printf("[SOFT RESET] See you!\n");
+    		microblaze_disable_interrupts();
+    		((void(*)())0x0)();  // jump to reset vector
+    	}
+    	if (switch_event & SW_BACK_TO_MAIN) {
     		mode = START;
     		gameStart.init(&controller);
     		return true;
     	}
+    	if (switch_event & SW_GYRO0_RESET) {
+    		controller.gyro0.reset();
+    	}
+    	if (switch_event & SW_GYRO0_CALIB) {
+    		controller.gyro0.calib();
+    	}
+    	if (switch_event & SW_GYRO1_RESET) {
+    		controller.gyro1.reset();
+    	}
+    	if (switch_event & SW_GYRO1_CALIB) {
+    		controller.gyro1.calib();
+    	}
+
 
     	if (mode == START) {
     		if (gameStart.update()) {
     			if (gameStart.selection == gameStart.S_OPTION) {
     				mode = OPTION;
-    				gameOption.init(&controller, &map);
+    				gameOption.init(&controller, &map, &total_laps);
     				return true;
     			} else if (gameStart.selection == gameStart.S_1PLAYER) {
     				mode = PLAY;
-    				gamePlay.init(&controller, &map, false);
+    				gamePlay.init(&controller, &map, false, total_laps);
     				return true;
     			} else if (gameStart.selection == gameStart.S_2PLAYER) {
     				mode = PLAY;
-    				gamePlay.init(&controller, &map, true);
+    				gamePlay.init(&controller, &map, true, total_laps);
     				return true;
     			}
     		}
@@ -90,13 +112,20 @@ struct Game {
     				return true;
     			} else if (gameOption.selection == GameOption::S_MAP0) {
     				map.init(Map::MAP_0);
-
     				return true;
     			} else if (gameOption.selection == GameOption::S_MAP1) {
     				map.init(Map::MAP_1);
     				return true;
     			} else if (gameOption.selection == GameOption::S_MAP2) {
     				map.init(Map::MAP_2);
+    				return true;
+    			} else if (gameOption.selection == GameOption::S_LAP_DECR) {
+    				if (total_laps == 1) return false;
+    				total_laps--;
+    				return true;
+    			} else if (gameOption.selection == GameOption::S_LAP_INCR) {
+    				if (total_laps == 9) return false;
+    				total_laps++;
     				return true;
     			} else {
     				auto [id, bd] = gameOption.ctrlbd_mapper[gameOption.selection];
@@ -112,7 +141,7 @@ struct Game {
 					gamePlay.finish_framestamp[1]);
     			return true;
     		}
-    		return false;  // FIXME
+    		return false;
     	} else if (mode == END) {
     		if (gameEnd.update()) {
     	    	mode = START;

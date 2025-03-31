@@ -10,8 +10,8 @@
 #ifdef __MICROBLAZE__
 #include <array>
 #include <cstdint>
-#include "../../graphics/color/color.hpp";
-#include "../../graphics/image/image.hpp";
+#include "../../graphics/color/color.hpp"
+#include "../../graphics/image/image.hpp"
 #include "xil_cache.h"
 
 struct Tile16 {
