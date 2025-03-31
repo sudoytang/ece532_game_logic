@@ -12,6 +12,7 @@
 
 #include "game/map.hpp"
 #include "game/car.hpp"
+#include "game/game.hpp"
 
 #include "platform/disp_man.hpp"
 #ifdef __MICROBLAZE__
@@ -20,9 +21,7 @@
 #include "platform/microblaze/intc.hpp"
 #include "xparameters.h"
 #include "xil_cache.h"
-
-GYROManager gyro0;
-//GYROManager gyro1;
+#include "platform/microblaze/sprite_engine.hpp"
 TimerManager timer;
 
 DisplayManager m_bg;
@@ -31,7 +30,9 @@ DisplayManager m_fg;
 void registerAllIntrs() {
 	intrRegister({XPAR_INTC_0_AXIVDMA_0_VEC_ID, XAxiVdma_ReadIntrHandler, (void*)&m_bg.man.dma_inst});
 	intrRegister({XPAR_INTC_0_AXIVDMA_1_VEC_ID, XAxiVdma_ReadIntrHandler, (void*)&m_fg.man.dma_inst});
+	intrRegister({XPAR_INTC_0_TMRCTR_0_VEC_ID, XTmrCtr_InterruptHandler, (void*)&timer.instance});
 }
+
 
 #else
 
@@ -90,126 +91,81 @@ int init_all() {
 	registerAllIntrs();
 	status = init_intc();
 	CHK_STATUS(status);
-	gyro0.init((void*)GYRO0_RAW_ADDR, true);
-	gyro0.calib();
-//	gyro1.init((void*)GYRO1_RAW_ADDR, true);
-//	gyro1.calib();
+	xil_printf("[init_all] success.\n");
 	return XST_SUCCESS;
 }
 
 constexpr int height = Display800x600::VRES;
 constexpr int width = Display800x600::HRES;
 
-typedef enum {
-	BTN_NONE = 0b00000,
-	BTNU = 0b00001,
-	BTNL = 0b00010,
-	BTNR = 0b00100,
-	BTND = 0b01000,
-	BTNC = 0b10000,
-} Button;
+Game game;
 
-Map map;
-
-int main_game() {
+int main_game_final() {
 	xil_printf("\n\nHello World!\n");
 	int status = init_all();
 	CHK_STATUS(status);
-	gyro0.poll();
-//	gyro1.poll();
-	map.init();
-	map.draw(m_bg.getDisplay().getScreenDraw(0));
+	m_bg.getDisplay().getScreenDraw(0).setBlank(C_WHITE);
+	game.init();
+	game.draw_static(m_bg.getDisplay().getScreenDraw(0));
+	int last_frame_count = -1;
 
-//	m_fg.display.getScreenDraw(0).drawText(Font::DEFAULT_FONT, 10, 10, "0", C_WHITE);
-//	m_fg.display.getScreenDraw(1).drawText(Font::DEFAULT_FONT, 30, 10, "1", C_WHITE);
-//	m_fg.display.getScreenDraw(2).drawText(Font::DEFAULT_FONT, 50, 10, "2", C_WHITE);
-	Car car (200, 200, &map);
 	std::tuple<int /*x*/, int /*y*/, int /*width*/, int /*height*/>
-		restore_pos[Display800x600::NBUF];
+		restore_pos0[Display800x600::NBUF];
     for (int i = 0; i < Display800x600::NBUF; i++) {
-        restore_pos[i] = {INT_MIN, INT_MIN, INT_MIN, INT_MIN};
+        restore_pos0[i] = {INT_MIN, INT_MIN, INT_MIN, INT_MIN};
     }
-
-    auto get_impulse_from_btn = [&car]() {
-    	uint32_t btn = gyro0.btn_val;
-    	if (btn == 0) return;
-    	const float impulse = 0.5f;
-    	float impulse_x = 0.0f;
-    	float impulse_y = 0.0f;
-
-    	if (btn & BTNU) {
-    		impulse_y -= impulse;
-    	}
-    	if (btn & BTND) {
-    		impulse_y += impulse;
-    	}
-    	if (btn & BTNL) {
-    		impulse_x -= impulse;
-    	}
-    	if (btn & BTNR) {
-    		impulse_x += impulse;
-    	}
-    	if (btn & BTNC) {
-    		gyro0.reset();
-//    		gyro1.reset();
-    	}
-    	car.applyImpulseCartesian(impulse_x, impulse_y);
-    };
-
-    int last_frame_count = -1;
-    while (true) {
-    	gyro0.poll();
-//    	gyro1.poll();
-    	if (last_frame_count >= m_fg.getFrameCount()) {
-    		usleep(1000);
-    		continue;
-    	}
-    	if (std::abs(gyro0.currentX) > 4.f || std::abs(gyro0.currentY) > 4.f)
-			car.applyImpulseCartesian(
-				- gyro0.currentX * (0.3f/90.f),
-				gyro0.currentY * (0.3f/90.f));
-    	if (m_fg.getFrameCount() % 60 == 0) {
-    		xil_printf("GYRO X:%d Y:%d Z:%d\n",
-    			(int)gyro0.currentX, (int)gyro0.currentY, (int)gyro0.currentZ);
-    	}
-//    	xil_printf("Frame count: %d\n", m_fg.total_frame_count);
-    	last_frame_count = m_fg.getFrameCount();
-    	get_impulse_from_btn();
-    	car.update();
-    	auto next_fid = m_fg.getDisplay().getNextFID();
-    	auto draw = m_fg.getDisplay().getScreenDraw(next_fid);
-        auto [x, y, xsize, ysize] = restore_pos[next_fid];
-        if (x != INT_MIN) {
-        	draw.drawRect(x, y, xsize, ysize, C_TRANSPARENT, true);
-        }
-        restore_pos[next_fid] = car.draw(draw, 0);
-        auto [drw_x, drw_y, drw_xsize, drw_ysize] = restore_pos[next_fid];
-        ImageSlice refresh_slice;
-        if (x != INT_MIN) {
-        	refresh_slice = draw.getSlice().slice(
-				std::min(x, drw_x), std::min(y, drw_y),
-				std::abs(x - drw_x) + drw_xsize, std::abs(y - drw_y) + drw_ysize);
-        } else {
-        	refresh_slice = draw.getSlice().slice(
-				drw_x, drw_y,
-				drw_xsize, drw_ysize);
-        }
-        m_fg.man.FlushPixels(refresh_slice);
-
-        m_fg.getDisplay().swapBuffers(next_fid);
-    	usleep(1000);
+	std::tuple<int /*x*/, int /*y*/, int /*width*/, int /*height*/>
+		restore_pos1[Display800x600::NBUF];
+    for (int i = 0; i < Display800x600::NBUF; i++) {
+        restore_pos1[i] = {INT_MIN, INT_MIN, INT_MIN, INT_MIN};
     }
+    xil_printf("Starting Game loop!\n");
+	for (;;) {
 
-	return 0;
+		game.controller.GyroSubtick();
+		auto frame_count = m_fg.getFrameCount();
+		if (last_frame_count >= frame_count) {
+			usleep(1666);
+			continue;
+		}
+
+		if (last_frame_count != -1 && last_frame_count + 1 < frame_count) {
+			xil_printf("[WARN] Buffer underrun: %d frames skipped.\n", frame_count - (last_frame_count + 1));
+		}
+
+		auto static_redraw = game.update();
+
+		auto next_fid = 0;
+		auto draw = m_fg.getDisplay().getScreenDraw(next_fid);
+		if (static_redraw) {
+			xil_printf("Static redraw\n");
+			draw.setBlank(C_TRANSPARENT);
+			game.draw_static(m_bg.getDisplay().getScreenDraw(0));
+		}
+		game.draw_dynamic(draw);
+		last_frame_count = frame_count;
+		usleep(1666);
+	}
 }
+
 
 
 int main() {
 
 	xil_printf("\n\nMain: Hello World!!\n");
+	volatile unsigned* vectors = (unsigned*)0x00;
+	xil_printf("Vectors: \n");
+	for (int i = 0; i < 8; i += 2) {
+		xil_printf("%x: %x %x\n", i * 4, vectors[i], vectors[i+1]);
+	}
+	if (vectors[0] == 0) {
+		xil_printf("System corrputed!!!!!\n");
+		while (true) {}
+	}
 //	auto status = init_all();
 //	CHK_STATUS(status);
 //	main_1();
-	main_game();
+//	main_game();
+	main_game_final();
 //	assert(0);
 }

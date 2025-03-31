@@ -67,6 +67,7 @@ void memory_end() {
 
 void* allocate(uint32_t size) {
     if (tlsf == nullptr || heap == nullptr) {
+    	xil_printf("[MEMORY ERROR] Trying to allocate %d while heap is not available!\n", size);
         return nullptr;
     }
     auto res = tlsf_malloc(tlsf, size);
@@ -76,6 +77,7 @@ void* allocate(uint32_t size) {
 
 void* allocate_aligned(uint32_t size, uint32_t alignment) {
     if (tlsf == nullptr || heap == nullptr) {
+    	xil_printf("[MEMORY ERROR] Trying to allocate %d while heap is not available!\n", size);
         return nullptr;
     }
     auto res = tlsf_memalign(tlsf, alignment, size);
@@ -85,6 +87,7 @@ void* allocate_aligned(uint32_t size, uint32_t alignment) {
 
 void deallocate(void* ptr) {
     if (tlsf == nullptr || heap == nullptr) {
+    	xil_printf("[MEMORY ERROR] Trying to deallocate [%x] while heap is not available!\n", ptr);
         return;
     }
     tlsf_free(tlsf, ptr);
@@ -93,6 +96,7 @@ void deallocate(void* ptr) {
 
 void* reallocate(void* ptr, uint32_t size) {
     if (tlsf == nullptr || heap == nullptr) {
+    	xil_printf("[MEMORY ERROR] Trying to reallocate %d at [%x] while heap is not available!\n", size, ptr);
         return nullptr;
     }
     auto res = tlsf_realloc(tlsf, ptr, size);

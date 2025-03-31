@@ -37,7 +37,9 @@ public:
     ImageSlice getGlyph(char c) const;
     bool isValidFont() const;
     static Font fromImageView(ImageView view, int glyph_width, int glyph_height, int char_per_row);
-    static Font DEFAULT_FONT;
+    static Font fromImage(Image&& img, int glyph_width, int glyph_height, int char_per_row);
+    static Font DEFAULT_FONT16;
+    static Font DEFAULT_FONT32;
     static void initDefaultFont();
 
 };

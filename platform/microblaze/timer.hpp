@@ -31,7 +31,7 @@ struct TimerManager {
 	    XTmrCtr_SetHandler(TimerInstancePtr, TimerInterruptHandler, TimerInstancePtr);
 	    XTmrCtr_SetOptions(TimerInstancePtr, 0, XTC_DOWN_COUNT_OPTION | XTC_INT_MODE_OPTION | XTC_AUTO_RELOAD_OPTION);
 	    XTmrCtr_SetResetValue(TimerInstancePtr, 0, TIMER_LOAD_VALUE);
-
+//	    XTmrCtr_Start(TimerInstancePtr, 0);
 	    return XST_SUCCESS;
 	}
 };

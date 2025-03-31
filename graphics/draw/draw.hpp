@@ -8,6 +8,10 @@
 #include "../image/image.hpp"
 #include "../font/font.hpp"
 
+#ifdef __MICROBLAZE__
+#include "xil_cache.h"
+#endif
+
 // class Draw
 // sometimes we need to draw something on a specific area of the frame buffer
 // so we need to specify the start position, the width & height of the area
@@ -51,6 +55,32 @@ public:
     static Draw from(const Image& image);
     static Draw from(ImageView view);
     static Draw from(ImageSlice slice);
+
+#ifdef __MICROBLAZE__
+	static Color* getFirstPixelAddress(ImageSlice slice) {
+		auto ptr = slice.view.data;
+		ptr += (slice.y * slice.view.width);
+		ptr += slice.x;
+		return ptr;
+	}
+
+	static Color* getEndPixelAddress(ImageSlice slice) {
+		auto ptr = slice.view.data;
+		ptr += ((slice.y + slice.height) * slice.view.width);
+		return ptr;
+	}
+
+	static void FlushPixels(ImageSlice refresh_slice) {
+        auto start_cache_ptr = (UINTPTR)getFirstPixelAddress(refresh_slice);
+        int cache_len = (UINTPTR)getEndPixelAddress(refresh_slice) - start_cache_ptr;
+        Xil_DCacheFlushRange(start_cache_ptr, cache_len);
+	}
+#else
+	static void FlushPixels(ImageSlice refresh_slice) {
+		// not on microblaze, don't do anythin
+	}
+#endif
+
 };
 
 

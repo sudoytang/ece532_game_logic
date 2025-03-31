@@ -89,6 +89,27 @@ Image ImageView::toImage() const {
     return Image::fromMemory(data, width, height);
 }
 
+Image ImageView::upscale(int times) const {
+	Image res = Image::fromBlank(this->width * times, this->height * times);
+	for (int y = 0; y < res.height; y++) {
+		for (int x = 0; x < res.width; x++) {
+			auto c = this->get(x / times, y / times);
+			res.set(x, y, c);
+		}
+	}
+	return res;
+}
+
+Image ImageView::downscale(int times) const {
+	Image res = Image::fromBlank(this->width / times, this->height / times);
+	for (int y = 0; y < res.height; y++) {
+		for (int x = 0; x < res.width; x++) {
+			res.set(x, y, this->get(x * times, y * times));
+		}
+	}
+	return res;
+}
+
 ImageSlice ImageView::slice(int x, int y, int width, int height) const {
     ImageSlice slice;
     slice.width = width;

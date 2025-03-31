@@ -148,25 +148,11 @@ struct VDMAManager {
 		return;
 	};
 
-
-
 	static Color* getFirstPixelAddress(ImageSlice slice) {
 		auto ptr = slice.view.data;
 		ptr += (slice.y * slice.view.width);
 		ptr += slice.x;
 		return ptr;
-	}
-
-	static Color* getEndPixelAddress(ImageSlice slice) {
-		auto ptr = slice.view.data;
-		ptr += ((slice.y + slice.height) * slice.view.width);
-		return ptr;
-	}
-
-	static void FlushPixels(ImageSlice refresh_slice) {
-        auto start_cache_ptr = (UINTPTR)getFirstPixelAddress(refresh_slice);
-        int cache_len = (UINTPTR)getEndPixelAddress(refresh_slice) - start_cache_ptr;
-        Xil_DCacheFlushRange(start_cache_ptr, cache_len);
 	}
 
 	static int dmaResetCurrentScreenPtr(Display800x600* disp, XAxiVdma* vdma) {
@@ -273,10 +259,14 @@ struct VDMAManager {
 			return status;
 		}
 		auto onRead = +[](void* cb_ref, u32 mask) {
+//			xil_printf("[INTR][VDMA On Read]\n");
 			VDMAManager* manager = (VDMAManager*)cb_ref;
 			manager->total_frame_count += 1;
 //			manager->ReadSwapBuffer();
 //			manager->StartVDMA();
+		};
+		auto onErr = +[](void* cb_ref, u32 mask) {
+			xil_printf("[INTR] VDMA Error!\n");
 		};
 		status = XAxiVdma_SetCallBack(&dma_inst, XAXIVDMA_HANDLER_GENERAL, (void*)onRead,
 		    (void *)this, XAXIVDMA_READ);
@@ -284,9 +274,7 @@ struct VDMAManager {
 			xil_printf("Set read callback failed: 0x%X\r\n", status);
 			return status;
 		}
-		auto onErr = +[](void* cb_ref, u32 mask) {
-			xil_printf("[INTR] VDMA Error!\n");
-		};
+
 		status = XAxiVdma_SetCallBack(&dma_inst, XAXIVDMA_HANDLER_ERROR,
 		    (void*)onErr, (void *)this, XAXIVDMA_READ);
 		if (status != XST_SUCCESS) {
