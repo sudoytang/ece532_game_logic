@@ -182,48 +182,82 @@ struct Car {
     calcMapCollision(const Map& map, float pos_x, float pos_y, float v_x, float v_y) {
     	int ipos_x = int(pos_x);
     	int ipos_y = int(pos_y);
-    	int new_x = int(pos_x + v_x);
-    	int new_y = int(pos_y + v_y);
+
     	bool collide_x = false;
     	bool collide_y = false;
+    	if (v_x > 0) {
+    		v_x++;
+    	} else if (v_x < 0) {
+    		v_x--;
+    	}
+    	if (v_y > 0) {
+    		v_y++;
+    	} else if (v_x < 0) {
+    		v_y--;
+    	}
     	// test x-axis
-    	if (map[ipos_y + COLLIBOX_Y0][new_x + COLLIBOX_X0]
-		||  map[ipos_y + COLLIBOX_Y0][new_x + COLLIBOX_XMID]
-		||  map[ipos_y + COLLIBOX_Y0][new_x + COLLIBOX_X1] // top 3 points
-		||  map[ipos_y + COLLIBOX_Y1][new_x + COLLIBOX_X0]
-		||  map[ipos_y + COLLIBOX_Y1][new_x + COLLIBOX_XMID]
-		||  map[ipos_y + COLLIBOX_Y1][new_x + COLLIBOX_X1] // bottom 3 points
-    	) {
-    		collide_x = true;
+    	for (int py = ipos_y + COLLIBOX_Y0; py <= ipos_y + COLLIBOX_Y1; py++)
+    	for (int px = ipos_x + COLLIBOX_X0; px <= ipos_x + COLLIBOX_X1; px++) {
+    		if (map[py][px]) {
+    			xil_printf("already stuck!\n");
+    		}
+    		if (map[int(py + v_y)][px]) {
+    			collide_y = true;
+    		}
+    		if (map[py][int(px + v_x)]) {
+    			collide_x = true;
+    		}
+    		if (collide_x && collide_y) {
+    			return {collide_x, collide_y};
+    		}
+    		if (!collide_x && !collide_y && map[int(py + v_y)][int(px + v_x)]) {
+    			collide_x = true;
+    			collide_y = true;
+    			return {collide_x, collide_y};
+    		}
     	}
-    	// test y-axis
-    	if (map[new_y + COLLIBOX_Y0][ipos_x + COLLIBOX_X0]
-		||  map[new_y + COLLIBOX_Y0][ipos_x + COLLIBOX_XMID]
-		||  map[new_y + COLLIBOX_Y0][ipos_x + COLLIBOX_X1] // top 3 points
-		||  map[new_y + COLLIBOX_Y1][ipos_x + COLLIBOX_X0]
-		||  map[new_y + COLLIBOX_Y1][ipos_x + COLLIBOX_XMID]
-		||  map[new_y + COLLIBOX_Y1][ipos_x + COLLIBOX_X1] // bottom 3 points
-    	) {
-    		collide_y = true;
-    	}
-    	if (collide_x || collide_y) {
-        	return {collide_x, collide_y};
-    	}
+
+
+
+
+//    	if (map[ipos_y + COLLIBOX_Y0][new_x + COLLIBOX_X0]
+//		||  map[ipos_y + COLLIBOX_Y0][new_x + COLLIBOX_XMID]
+//		||  map[ipos_y + COLLIBOX_Y0][new_x + COLLIBOX_X1] // top 3 points
+//		||  map[ipos_y + COLLIBOX_Y1][new_x + COLLIBOX_X0]
+//		||  map[ipos_y + COLLIBOX_Y1][new_x + COLLIBOX_XMID]
+//		||  map[ipos_y + COLLIBOX_Y1][new_x + COLLIBOX_X1] // bottom 3 points
+//    	) {
+//    		collide_x = true;
+//    	}
+//    	// test y-axis
+//    	if (map[new_y + COLLIBOX_Y0][ipos_x + COLLIBOX_X0]
+//		||  map[new_y + COLLIBOX_Y0][ipos_x + COLLIBOX_XMID]
+//		||  map[new_y + COLLIBOX_Y0][ipos_x + COLLIBOX_X1] // top 3 points
+//		||  map[new_y + COLLIBOX_Y1][ipos_x + COLLIBOX_X0]
+//		||  map[new_y + COLLIBOX_Y1][ipos_x + COLLIBOX_XMID]
+//		||  map[new_y + COLLIBOX_Y1][ipos_x + COLLIBOX_X1] // bottom 3 points
+//    	) {
+//    		collide_y = true;
+//    	}
+//    	if (collide_x || collide_y) {
+//        	return {collide_x, collide_y};
+//    	}
+
     	// there is a problem if the corner of the car hits the boundary:
     	// if [ipos_y, new_x] is ok, and [new_y, iposx] is ok
     	// but [ipos_y, ipos_x] is not ok
 
 
-    	if (map[new_y + COLLIBOX_Y0][new_x + COLLIBOX_X0]
-		||  map[new_y + COLLIBOX_Y0][new_x + COLLIBOX_XMID]
-		||  map[new_y + COLLIBOX_Y0][new_x + COLLIBOX_X1] // top 3 points
-		||  map[new_y + COLLIBOX_Y1][new_x + COLLIBOX_X0]
-		||  map[new_y + COLLIBOX_Y1][new_x + COLLIBOX_XMID]
-		||  map[new_y + COLLIBOX_Y1][new_x + COLLIBOX_X1] // bottom 3 points
-    	) {
-    		collide_x = true;
-    		collide_y = true;
-    	}
+//    	if (map[new_y + COLLIBOX_Y0][new_x + COLLIBOX_X0]
+//		||  map[new_y + COLLIBOX_Y0][new_x + COLLIBOX_XMID]
+//		||  map[new_y + COLLIBOX_Y0][new_x + COLLIBOX_X1] // top 3 points
+//		||  map[new_y + COLLIBOX_Y1][new_x + COLLIBOX_X0]
+//		||  map[new_y + COLLIBOX_Y1][new_x + COLLIBOX_XMID]
+//		||  map[new_y + COLLIBOX_Y1][new_x + COLLIBOX_X1] // bottom 3 points
+//    	) {
+//    		collide_x = true;
+//    		collide_y = true;
+//    	}
 
     	return {collide_x, collide_y};
     }
