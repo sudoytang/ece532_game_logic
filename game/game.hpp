@@ -12,7 +12,6 @@
 #include "gameend.hpp"
 
 
-
 struct Game {
     enum MainState {
         START,

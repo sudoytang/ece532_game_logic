@@ -241,6 +241,7 @@ struct GameOption {
 		short x, y, z;
 		int draw_x, draw_y;
 		controller->gyro0.read(x, y, z);
+
 		draw_x = GYRO0_STAT_CENTER_X + normalize(x) - 1;
 		draw_y = GYRO0_STAT_CENTER_Y + normalize(y) - 1;
 		draw_fg.drawRect(last_draw_x0, last_draw_y0, 3, 3, C_TRANSPARENT, true);
@@ -250,6 +251,8 @@ struct GameOption {
 		last_draw_y0 = draw_y;
 
 		controller->gyro1.read(x, y, z);
+		x = -x;
+		y = -y;
 		draw_x = GYRO1_STAT_CENTER_X + normalize(x) - 1;
 		draw_y = GYRO1_STAT_CENTER_Y + normalize(y) - 1;
 		draw_fg.drawRect(last_draw_x1, last_draw_y1, 3, 3, C_TRANSPARENT, true);

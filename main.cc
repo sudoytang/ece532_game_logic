@@ -14,6 +14,8 @@
 #include "game/car.hpp"
 #include "game/game.hpp"
 
+#include "game/data/bgm.h"
+
 #include "platform/disp_man.hpp"
 #ifdef __MICROBLAZE__
 #include "platform/microblaze/gyro.hpp"
@@ -22,10 +24,12 @@
 #include "xparameters.h"
 #include "xil_cache.h"
 #include "platform/microblaze/sprite_engine.hpp"
+#include "platform/microblaze/adma.hpp"
 TimerManager timer;
 
 DisplayManager m_bg;
 DisplayManager m_fg;
+ADMAManager adma;
 
 void registerAllIntrs() {
 	intrRegister({XPAR_INTC_0_AXIVDMA_0_VEC_ID, XAxiVdma_ReadIntrHandler, (void*)&m_bg.man.dma_inst});
@@ -85,9 +89,17 @@ int init_all() {
 	status = m_fg.init();
 	CHK_STATUS(status);
 
+	timer.RegisterTimerCallBack(+[](void* adma) {
+		ADMAManager* inst = (ADMAManager*)adma;
+		inst->poll();
+	}, &adma);
 	status = timer.SetupTimer();
 	CHK_STATUS(status);
 	game.controller.init();
+	xil_printf("AMDA init.\n");
+	status = adma.init();
+	CHK_STATUS(status);
+	adma.setBGM((uint8_t*)bgm, bgm_size);
 
 	registerAllIntrs();
 	status = init_intc();
@@ -99,7 +111,27 @@ int init_all() {
 constexpr int height = Display800x600::VRES;
 constexpr int width = Display800x600::HRES;
 
+uint8_t insert_samples[896 * 2];
 
+void generate_sweep_sfx() {
+
+    const int totalSamples = 896 * 2;  // Total number of samples
+    float frequency = 1000;        // Initial frequency in arbitrary units
+    double decayFactor = 0.99;      // Factor to decrease frequency
+    int sampleRate = 8000;          // Samples per second
+
+    for (int i = 0, period = sampleRate / frequency; i < totalSamples; i++) {
+        // Generate square wave sample
+        uint8_t sample = (i / (period / 2)) % 2 == 0 ? 254 : 1;
+        insert_samples[i] = sample;
+
+        // Gradually decrease the frequency
+        if (i % (period * 2) == 0) {
+            frequency *= decayFactor;
+            period = sampleRate / frequency;  // Recalculate period
+        }
+    }
+}
 
 int main_game_final() {
 	xil_printf("\n\nHello World!\n");
@@ -108,18 +140,11 @@ int main_game_final() {
 	m_bg.getDisplay().getScreenDraw(0).setBlank(C_WHITE);
 	game.init();
 	game.draw_static(m_bg.getDisplay().getScreenDraw(0));
-	int last_frame_count = -1;
 
-	std::tuple<int /*x*/, int /*y*/, int /*width*/, int /*height*/>
-		restore_pos0[Display800x600::NBUF];
-    for (int i = 0; i < Display800x600::NBUF; i++) {
-        restore_pos0[i] = {INT_MIN, INT_MIN, INT_MIN, INT_MIN};
-    }
-	std::tuple<int /*x*/, int /*y*/, int /*width*/, int /*height*/>
-		restore_pos1[Display800x600::NBUF];
-    for (int i = 0; i < Display800x600::NBUF; i++) {
-        restore_pos1[i] = {INT_MIN, INT_MIN, INT_MIN, INT_MIN};
-    }
+	generate_sweep_sfx();
+
+    adma.start();
+	int last_frame_count = -1;
     xil_printf("Starting Game loop!\n");
 	for (;;) {
 
@@ -138,6 +163,7 @@ int main_game_final() {
 		auto next_fid = 0;
 		auto draw = m_fg.getDisplay().getScreenDraw(next_fid);
 		if (static_redraw) {
+			adma.insert(insert_samples, 896 * 2);
 			xil_printf("Static redraw\n");
 			draw.setBlank(C_TRANSPARENT);
 			game.draw_static(m_bg.getDisplay().getScreenDraw(0));

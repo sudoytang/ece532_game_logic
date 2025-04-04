@@ -87,11 +87,11 @@ struct Controller {
         impulse_x =
             (std::abs(x) < GYRO_IMPULSE_THRESH) ?
             0.f :
-            x * GYRO_IMPULSE_SCALE;
+            -x * GYRO_IMPULSE_SCALE;
         impulse_y =
             (std::abs(y) < GYRO_IMPULSE_THRESH) ?
             0.f :
-            y * GYRO_IMPULSE_SCALE;
+            -y * GYRO_IMPULSE_SCALE;
         return {impulse_x, impulse_y};
     }
     void resetGyro1() {

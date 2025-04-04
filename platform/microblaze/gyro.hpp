@@ -60,8 +60,8 @@ struct GYROManager {
 	}
 
 	void read(short& x, short& y, short& z) {
-		x = -(short)*(volatile unsigned*)(device_addr + GYRO_X_ADDR_OFFSET);
-		y = (short)*(volatile unsigned*)(device_addr + GYRO_Y_ADDR_OFFSET);
+		y = (short)*(volatile unsigned*)(device_addr + GYRO_X_ADDR_OFFSET);
+		x = (short)*(volatile unsigned*)(device_addr + GYRO_Y_ADDR_OFFSET);
 		z = (short)*(volatile unsigned*)(device_addr + GYRO_Z_ADDR_OFFSET);
 	}
 
